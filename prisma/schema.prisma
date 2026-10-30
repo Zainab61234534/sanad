@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  YOUTH
+  SUPERVISOR
+  ADMIN
+}
+
+enum ApplicationStatus {
+  PENDING   // قيد المراجعة
+  ACCEPTED  // مقبول
+  REJECTED  // مرفوض
+  CANCELED  // ملغى
+}
+
+enum AnnouncementScope {
+  GENERAL  // لكل الشباب
+  PROGRAM  // لمسجّلي برنامج محدد
+}
+
+model AuthSession {
+  id               String    @id @default(uuid())
+  userId           String
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ip               String?
+  lastUsedAt       DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("auth_sessions")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  role         Role     @default(YOUTH)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  supervisedPrograms Program[]      @relation("ProgramSupervisor")
+  applications       Application[]  @relation("ApplicantApplications")
+  reviewedApps       Application[]  @relation("ApplicationReviewer")
+  announcements      Announcement[]
+  uploadedMaterials  ProgramMaterial[]
+  authSessions AuthSession[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model Program {
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  imageUrl      String?
+  capacity      Int
+  reservedSeats Int      @default(0)
+  isPublished   Boolean  @default(true)
+  supervisorId  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  supervisor    User              @relation("ProgramSupervisor", fields: [supervisorId], references: [id])
+  sessions      Session[]
+  applications  Application[]
+  announcements Announcement[]
+  materials     ProgramMaterial[]
+
+  @@index([supervisorId])
+  @@index([createdAt])
+  @@map("programs")
+}
+
+model Session {
+  id        String    @id @default(uuid())
+  programId String
+  startsAt  DateTime
+  endsAt    DateTime?
+  location  String?   
+  onlineUrl String?   
+  createdAt DateTime  @default(now())
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId, startsAt])
+  @@map("sessions")
+}
+
+model Application {
+  id           String            @id @default(uuid())
+  userId       String
+  programId    String
+  status       ApplicationStatus @default(PENDING)
+  cvUrl        String?
+  reviewNote   String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  user     User    @relation("ApplicantApplications", fields: [userId], references: [id], onDelete: Cascade)
+  program  Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  reviewer User?   @relation("ApplicationReviewer", fields: [reviewedById], references: [id])
+
+  @@unique([userId, programId])        // منع التقديم المكرر
+  @@index([programId, status])
+  @@index([userId, createdAt])
+  @@map("applications")
+}
+
+model Announcement {
+  id        String            @id @default(uuid())
+  title     String
+  content   String
+  scope     AnnouncementScope
+  programId String?           // null عند GENERAL
+  authorId  String
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  program Program? @relation(fields: [programId], references: [id], onDelete: Cascade)
+  author  User     @relation(fields: [authorId], references: [id])
+
+  @@index([scope, createdAt])
+  @@index([programId, createdAt])
+  @@map("announcements")
+}
+
+model ProgramMaterial {
+  id           String   @id @default(uuid())
+  programId    String
+  title        String
+  fileUrl      String   // مسار الملف فقط، وليس الملف نفسه
+  originalName String
+  mimeType     String
+  size         Int
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  program    Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  uploadedBy User    @relation(fields: [uploadedById], references: [id])
+
+  @@index([programId])
+  @@map("program_materials")
+}

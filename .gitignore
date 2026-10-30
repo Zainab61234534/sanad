@@ -1,0 +1,19 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/dist
+/src/generated
+/uploads
+*.tsbuildinfo
+
+/generated/prisma
+
+# Local AI/tooling artifacts
+.agents/
+.claude/
+.windsurf/
+skills-lock.json
+
+# Accidental nested Prisma output
+/sanad-youth/
