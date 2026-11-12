@@ -1,0 +1,95 @@
+erDiagram
+    USER {
+        uuid id PK
+        string email UK
+        string passwordHash
+        string fullName
+        string phone
+        Role role
+        boolean isActive
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    AUTH_SESSION {
+        uuid id PK
+        uuid userId FK
+        string refreshTokenHash UK
+        string userAgent
+        string ip
+        datetime lastUsedAt
+        datetime expiresAt
+        datetime revokedAt
+        datetime createdAt
+    }
+
+    PROGRAM {
+        uuid id PK
+        string title
+        string description
+        string imageUrl
+        int capacity
+        int reservedSeats
+        boolean isPublished
+        uuid supervisorId FK
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    SESSION {
+        uuid id PK
+        uuid programId FK
+        datetime startsAt
+        datetime endsAt
+        string location
+        string onlineUrl
+        datetime createdAt
+    }
+
+    APPLICATION {
+        uuid id PK
+        uuid userId FK
+        uuid programId FK
+        ApplicationStatus status
+        string cvUrl
+        string reviewNote
+        uuid reviewedById FK
+        datetime reviewedAt
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    ANNOUNCEMENT {
+        uuid id PK
+        string title
+        string content
+        AnnouncementScope scope
+        uuid programId FK
+        uuid authorId FK
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    PROGRAM_MATERIAL {
+        uuid id PK
+        uuid programId FK
+        string title
+        string fileUrl
+        string originalName
+        string mimeType
+        int size
+        uuid uploadedById FK
+        datetime createdAt
+    }
+
+    USER ||--o{ AUTH_SESSION : "owns"
+    USER ||--o{ PROGRAM : "supervises"
+    USER ||--o{ APPLICATION : "applies"
+    USER |o--o{ APPLICATION : "reviews"
+    USER ||--o{ ANNOUNCEMENT : "authors"
+    USER ||--o{ PROGRAM_MATERIAL : "uploads"
+
+    PROGRAM ||--o{ SESSION : "has"
+    PROGRAM ||--o{ APPLICATION : "receives"
+    PROGRAM |o--o{ ANNOUNCEMENT : "has (program-specific)"
+    PROGRAM ||--o{ PROGRAM_MATERIAL : "contains"

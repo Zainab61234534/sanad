@@ -12,6 +12,7 @@
 - [متغيرات البيئة](#متغيرات-البيئة)
 - [المسارات (API)](#المسارات-api)
 - [Postman](#postman)
+- [مخطط قاعدة البيانات (ERD)](#مخطط-قاعدة-البيانات-erd)
 - [رحلة الشاب](#رحلة-الشاب)
 - [قواعد المقاعد والتزامن](#قواعد-المقاعد-والتزامن)
 - [حالات الطلب](#حالات-الطلب)
@@ -241,6 +242,17 @@ npm run start:prod
 4. مجلد **09 - Cleanup / Destructive** يلغي الجلسات، لذا أعد تشغيل **00 - Setup** بعده.
 
 بيانات الدخول الافتراضية: `admin@sanad.local` / `Admin@12345` (بعد `npm run seed:admin`). تفاصيل أكثر في [`postman/README.md`](postman/README.md).
+
+---
+
+## مخطط قاعدة البيانات (ERD)
+
+![Sanad Youth ERD](docs/ERD.png)
+
+- [`docs/ERD.md`](docs/ERD.md) — المخطط بصيغة Mermaid + شرح العلاقات والقيود.
+- [`docs/ERD.png`](docs/ERD.png) — صورة جاهزة للعرض أو التقرير.
+- [`docs/erd.dbml`](docs/erd.dbml) — ملف DBML لفتحه على [dbdiagram.io](https://dbdiagram.io).
+- [`docs/erd.mmd`](docs/erd.mmd) — مصدر Mermaid.
 
 ---
 

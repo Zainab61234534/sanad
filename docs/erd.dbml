@@ -1,0 +1,147 @@
+// Sanad Youth — DBML schema
+// يمكن لصقه في https://dbdiagram.io لعرض ERD تفاعلي.
+
+Enum Role {
+  YOUTH
+  SUPERVISOR
+  ADMIN
+}
+
+Enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELED
+}
+
+Enum AnnouncementScope {
+  GENERAL
+  PROGRAM
+}
+
+Table users {
+  id uuid [pk]
+  email varchar [unique, not null]
+  passwordHash varchar [not null]
+  fullName varchar [not null]
+  phone varchar
+  role Role [not null, default: 'YOUTH']
+  isActive boolean [not null, default: true]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+
+  indexes {
+    role
+  }
+}
+
+Table auth_sessions {
+  id uuid [pk]
+  userId uuid [not null]
+  refreshTokenHash varchar [unique, not null]
+  userAgent varchar
+  ip varchar
+  lastUsedAt timestamp [not null, default: `now()`]
+  expiresAt timestamp [not null]
+  revokedAt timestamp
+  createdAt timestamp [not null, default: `now()`]
+
+  indexes {
+    (userId, revokedAt)
+    expiresAt
+  }
+}
+
+Table programs {
+  id uuid [pk]
+  title varchar [not null]
+  description text [not null]
+  imageUrl varchar
+  capacity int [not null]
+  reservedSeats int [not null, default: 0]
+  isPublished boolean [not null, default: true]
+  supervisorId uuid [not null]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+
+  indexes {
+    supervisorId
+    createdAt
+  }
+}
+
+Table sessions {
+  id uuid [pk]
+  programId uuid [not null]
+  startsAt timestamp [not null]
+  endsAt timestamp
+  location varchar
+  onlineUrl varchar
+  createdAt timestamp [not null, default: `now()`]
+
+  indexes {
+    (programId, startsAt)
+  }
+}
+
+Table applications {
+  id uuid [pk]
+  userId uuid [not null]
+  programId uuid [not null]
+  status ApplicationStatus [not null, default: 'PENDING']
+  cvUrl varchar
+  reviewNote varchar
+  reviewedById uuid
+  reviewedAt timestamp
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+
+  indexes {
+    (userId, programId) [unique]
+    (programId, status)
+    (userId, createdAt)
+  }
+}
+
+Table announcements {
+  id uuid [pk]
+  title varchar [not null]
+  content text [not null]
+  scope AnnouncementScope [not null]
+  programId uuid
+  authorId uuid [not null]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+
+  indexes {
+    (scope, createdAt)
+    (programId, createdAt)
+  }
+}
+
+Table program_materials {
+  id uuid [pk]
+  programId uuid [not null]
+  title varchar [not null]
+  fileUrl varchar [not null]
+  originalName varchar [not null]
+  mimeType varchar [not null]
+  size int [not null]
+  uploadedById uuid [not null]
+  createdAt timestamp [not null, default: `now()`]
+
+  indexes {
+    programId
+  }
+}
+
+Ref: auth_sessions.userId > users.id
+Ref: programs.supervisorId > users.id
+Ref: sessions.programId > programs.id
+Ref: applications.userId > users.id
+Ref: applications.programId > programs.id
+Ref: applications.reviewedById > users.id
+Ref: announcements.programId > programs.id
+Ref: announcements.authorId > users.id
+Ref: program_materials.programId > programs.id
+Ref: program_materials.uploadedById > users.id
